@@ -5,7 +5,7 @@
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
-      *) return;;
+    *) return;;
 esac
 
 # don't put duplicate lines or lines starting with space in the history.
@@ -38,11 +38,11 @@ fi
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
+    xterm*|rxvt*)
+        PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+        ;;
+    *)
+        ;;
 esac
 
 # Alias definitions.
@@ -58,13 +58,39 @@ fi
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
 fi
 
 export PATH=$HOME/bin:$PATH
 export EDITOR=$(which emacsclient)
 
+if [[ "$INSIDE_EMACS" = 'vterm' ]]; then
+    vterm_printf(){
+        if [ -n "$TMUX" ] && ([ "${TERM%%-*}" = "tmux" ] || [ "${TERM%%-*}" = "screen" ] ); then
+            # Tell tmux to pass the escape sequences through
+            printf "\ePtmux;\e\e]%s\007\e\\" "$1"
+        elif [ "${TERM%%-*}" = "screen" ]; then
+            # GNU screen (screen, screen-256color, screen-256color-bce)
+            printf "\eP\e]%s\007\e\\" "$1"
+        else
+            printf "\e]%s\e\\" "$1"
+        fi
+    }
+
+
+    function clear(){
+        vterm_printf "51;Evterm-clear-scrollback";
+        tput clear;
+    }
+
+    vterm_prompt_end(){
+        vterm_printf "51;A$(whoami)@$(hostname):$(pwd)"
+    }
+    PS1=$PS1'\[$(vterm_prompt_end)\]'
+fi
+
+source "$HOME/.cargo/env"

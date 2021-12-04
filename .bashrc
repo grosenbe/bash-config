@@ -93,4 +93,4 @@ if [[ "$INSIDE_EMACS" = 'vterm' ]]; then
     PS1=$PS1'\[$(vterm_prompt_end)\]'
 fi
 
-source "$HOME/.cargo/env"
+[[ -d $HOME/.cargo ]] && source "$HOME/.cargo/env"
